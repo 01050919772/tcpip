@@ -1,10 +1,6 @@
 package server;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.*;
 import java.util.*;
 
@@ -12,6 +8,8 @@ public class ServerChat {
 	ServerSocket serverSocket;
 	Socket socket;
 	Scanner sc;
+	String msg;
+	Sender sender;
 
 	public ServerChat() {
 	}
@@ -21,6 +19,7 @@ public class ServerChat {
 			serverSocket = new ServerSocket(port);
 			System.out.println("Ready Server");
 			start();
+		
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
@@ -35,14 +34,23 @@ public class ServerChat {
 	private void start() throws IOException {
 		socket = serverSocket.accept();
 		sc = new Scanner(System.in);
+
+		Receiver receiver = new Receiver();
+		receiver.start();
+		
 		while (true) {
 			System.out.println("Input Server Message");
-			String msg = sc.nextLine();
+			msg = sc.nextLine();
+			Sender sender = new Sender(); 
+			Thread t = new Thread(sender);
 			if (msg.equals("q")) {
 				sc.close();
+				sender.close();
+				receiver.close();
 				break;
 			}
-			System.out.println("Server : " + msg);
+			sender.setSendMessage(msg);
+			t.start();
 		}
 		System.out.println("Exit ServerChat");
 	}
@@ -102,7 +110,8 @@ public class ServerChat {
 					msg = din.readUTF();
 					System.out.println(msg);
 				} catch (IOException e) {
-					e.printStackTrace();
+					System.out.println("Exit Server User");
+					break;
 				}
 			}
 		}

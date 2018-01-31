@@ -4,7 +4,6 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
-
 public class ClientChat {
 	String ip;
 	int port;
@@ -29,19 +28,31 @@ public class ClientChat {
 			}
 		}
 	}
-	public void start() {
+	public void start() throws IOException {
 		sc = new Scanner(System.in);
+
+		Receiver receiver = new Receiver();
+		receiver.start();
+		
 		while(true) {
 			System.out.println("Input Client Message");
 			String msg = sc.nextLine();
+			Sender sender = new Sender(); 
+			Thread t = new Thread(sender);
 			if(msg.equals("q")) {
 				sc.close();
+				sender.close();
+				receiver.close();
 				break;
 			}
-			System.out.println("Client : " + msg);
+			// Runnable ½ÇÇà
+
+			sender.setSendMessage(msg);
+			t.start();
 		}
 		System.out.println("Exit Chatting");
 	}
+	
 	// Message Sender
 		class Sender implements Runnable {
 			OutputStream out;
@@ -66,7 +77,7 @@ public class ClientChat {
 						dout.writeUTF(msg);
 					}
 				} catch (IOException e) {
-					e.printStackTrace();
+					System.out.println("Not Available");
 				}
 			}
 		}	
@@ -91,7 +102,8 @@ public class ClientChat {
 						msg = din.readUTF();
 						System.out.println(msg);
 					} catch (IOException e) {
-						e.printStackTrace();
+						System.out.println("Exit Client User");
+						break;
 					}
 				}
 			}
